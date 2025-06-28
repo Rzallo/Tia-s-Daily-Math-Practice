@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Scientific Notation Practice</title>
+  <title>Daily Math Practice</title>
   <style>
     :root {
       --bg-color: #f5f7fa;
@@ -43,27 +43,29 @@
       text-align: center;
     }
 
-    input, button {
-      padding: 0.7em;
-      font-size: 1em;
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       margin-top: 1em;
-      width: 100%;
-      border: 1px solid var(--accent-color);
-      border-radius: 8px;
     }
 
-    button {
-      background-color: var(--accent-color);
-      color: white;
+    .choice-button {
+      padding: 0.7em;
+      font-size: 1em;
+      border: 1px solid var(--accent-color);
+      border-radius: 8px;
+      background-color: white;
       cursor: pointer;
       transition: background 0.3s;
     }
 
-    button:hover {
-      background-color: #005bb5;
+    .choice-button:hover {
+      background-color: var(--accent-color);
+      color: white;
     }
 
-    .feedback, .stats, .streak, .joke {
+    .feedback, .stats, .streak, .joke, .tip, .review-mode {
       margin-top: 1.5em;
       font-weight: bold;
       text-align: center;
@@ -72,6 +74,31 @@
     .joke {
       font-style: italic;
       color: #888;
+    }
+
+    .tip {
+      font-size: 0.9em;
+      color: #444;
+    }
+
+    .next-button {
+      display: block;
+      margin: 2em auto 0;
+      padding: 0.6em 1.2em;
+      font-size: 1em;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .next-button:hover {
+      opacity: 0.85;
+    }
+
+    .review-mode {
+      color: #ff4500;
     }
 
     hr {
@@ -90,15 +117,35 @@
   </div>
   <div class="streak" id="streak"></div>
   <div class="stats" id="stats"></div>
+  <div class="review-mode" id="reviewMode"></div>
   <hr />
   <div class="problem" id="problem"></div>
-  <input type="text" id="answer" placeholder="Enter your answer...">
-  <button onclick="checkAnswer()">Submit Answer</button>
+  <div class="choices" id="choices"></div>
   <div class="feedback" id="feedback"></div>
   <div class="joke" id="joke"></div>
+  <div class="tip" id="tip"></div>
+  <button class="next-button" id="nextBtn" style="display:none;">Next Question</button>
 
   <script>
-    // Dark mode toggle
+    const jokes = [
+      "Why did the student eat his homework? Because the teacher said it was a piece of cake!",
+      "Why was the equal sign so humble? Because it knew it wasn't less than or greater than anyone else.",
+      "Parallel lines have so much in common… it’s a shame they’ll never meet.",
+      "What did the zero say to the eight? Nice belt!",
+      "I told my calculator a joke… but it couldn’t compute it.",
+      "What do you call friends who love math? Alge-bros!",
+      "Why did the obtuse angle go to therapy? Because it was never right."
+    ];
+
+    const tips = [
+      "When multiplying scientific notation, multiply the numbers and add the exponents.",
+      "When dividing scientific notation, divide the numbers and subtract the exponents.",
+      "Convert decimals to scientific notation if one number is too small or too large.",
+      "To estimate quickly, round each number to 1 significant figure.",
+      "Always line up the base (10) when simplifying powers.",
+      "Double check your exponent math—it's easy to miss a + or -."
+    ];
+
     const darkToggle = document.getElementById('darkToggle');
     darkToggle.checked = localStorage.getItem('dark-mode') === 'true';
     if (darkToggle.checked) document.body.classList.add('dark-mode');
@@ -112,130 +159,130 @@
       }
     });
 
-    // Jokes
-    const jokes = [
-      "Why did the student eat his homework? Because the teacher said it was a piece of cake!",
-      "Why was the equal sign so humble? Because it knew it wasn't less than or greater than anyone else.",
-      "Parallel lines have so much in common… it’s a shame they’ll never meet.",
-      "What did the zero say to the eight? Nice belt!",
-      "I told my calculator a joke… but it couldn’t compute it.",
-      "What do you call friends who love math? Alge-bros!",
-      "Why did the obtuse angle go to therapy? Because it was never right."
-    ];
+    const getToday = () => new Date().toISOString().split('T')[0];
+    const getRandom = arr => arr[Math.floor(Math.random() * arr.length)];
 
-    function getRandomJoke() {
-      const index = Math.floor(Math.random() * jokes.length);
-      return jokes[index];
-    }
-
-    // Utilities
-    function getTodayString() {
-      const d = new Date();
-      return d.toISOString().split('T')[0];
-    }
-
-    function generateUniqueProblem() {
-      const pastProblems = JSON.parse(localStorage.getItem('pastProblems') || '[]');
-      let attempt = 0;
+    function generateProblem() {
+      const useSci = Math.random() > 0.5;
+      const isDiv = Math.random() > 0.5;
       let problemText, answer;
-      while (attempt < 1000) {
-        const useSci = Math.random() > 0.5;
-        const isDiv = Math.random() > 0.5;
-
-        if (useSci) {
-          const b1 = +(Math.random() * 9 + 1).toFixed(3);
-          const e1 = Math.floor(Math.random() * 9 - 5);
-          const b2 = +(Math.random() * 9 + 1).toFixed(3);
-          const e2 = Math.floor(Math.random() * 9 - 5);
-          const l = `${b1}×10^${e1}`;
-          const r = `${b2}×10^${e2}`;
-          problemText = `(${l}) ${isDiv ? '/' : '*'} (${r})`;
-          answer = isDiv
-            ? (b1 / b2 * Math.pow(10, e1 - e2))
-            : (b1 * b2 * Math.pow(10, e1 + e2));
-        } else {
-          const n1 = +(Math.random() * 0.999).toFixed(5);
-          const n2 = +(Math.random() * 0.999).toFixed(5);
-          problemText = `${n1} ${isDiv ? '/' : '*'} ${n2}`;
-          answer = isDiv ? n1 / n2 : n1 * n2;
-        }
-
-        if (!pastProblems.includes(problemText)) {
-          return { problemText, answer: +answer.toFixed(8) };
-        }
-        attempt++;
+      if (useSci) {
+        const b1 = +(Math.random() * 9 + 1).toFixed(3);
+        const e1 = Math.floor(Math.random() * 9 - 5);
+        const b2 = +(Math.random() * 9 + 1).toFixed(3);
+        const e2 = Math.floor(Math.random() * 9 - 5);
+        const l = `${b1}×10^${e1}`;
+        const r = `${b2}×10^${e2}`;
+        problemText = `(${l}) ${isDiv ? '/' : '*'} (${r})`;
+        answer = isDiv ? (b1 / b2 * Math.pow(10, e1 - e2)) : (b1 * b2 * Math.pow(10, e1 + e2));
+      } else {
+        const n1 = +(Math.random() * 0.999).toFixed(5);
+        const n2 = +(Math.random() * 0.999).toFixed(5);
+        problemText = `${n1} ${isDiv ? '/' : '*'} ${n2}`;
+        answer = isDiv ? n1 / n2 : n1 * n2;
       }
-      return null;
+      return { problemText, answer: +answer.toFixed(8) };
     }
 
-    // State
-    let currentProblem = generateUniqueProblem();
-    document.getElementById('problem').textContent = currentProblem.problemText;
+    function generateChoices(correct) {
+      const choices = [correct];
+      while (choices.length < 4) {
+        let variation = +(correct * (1 + (Math.random() - 0.5) * 0.2)).toFixed(8);
+        if (!choices.includes(variation)) choices.push(variation);
+      }
+      return choices.sort(() => Math.random() - 0.5);
+    }
 
-    function checkAnswer() {
-      const userVal = parseFloat(document.getElementById('answer').value);
-      const correct = currentProblem.answer;
-      const isCorrect = Math.abs(userVal - correct) < 0.00001;
+    let currentProblem = {}, hasAnswered = false, inReview = false;
 
-      document.getElementById('feedback').textContent = isCorrect ? "✅ Correct!" : `❌ Try again. Answer was ${correct}`;
-      document.getElementById('joke').textContent = getRandomJoke();
+    function renderProblem() {
+      hasAnswered = false;
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('joke').textContent = '';
+      document.getElementById('tip').textContent = '';
+      document.getElementById('nextBtn').style.display = 'none';
+      document.getElementById('reviewMode').textContent = '';
 
-      const today = getTodayString();
-      const pastProblems = JSON.parse(localStorage.getItem('pastProblems') || '[]');
-      pastProblems.push(currentProblem.problemText);
-      localStorage.setItem('pastProblems', JSON.stringify(pastProblems));
+      const wrongMap = JSON.parse(localStorage.getItem('wrongProblems') || '{}');
+      const entries = Object.entries(wrongMap);
+      if (entries.length > 0) {
+        const [prob, stats] = getRandom(entries);
+        currentProblem.problemText = prob;
+        currentProblem.answer = stats.correctAnswer;
+        inReview = true;
+        document.getElementById('reviewMode').textContent = '🧠 Review Mode — Get it right 3 times to move on!';
+      } else {
+        currentProblem = generateProblem();
+        inReview = false;
+      }
 
-      let log = JSON.parse(localStorage.getItem('log') || '{}');
+      document.getElementById('problem').textContent = currentProblem.problemText;
+      const container = document.getElementById('choices');
+      container.innerHTML = '';
+      generateChoices(currentProblem.answer).forEach(choice => {
+        const btn = document.createElement('button');
+        btn.textContent = choice;
+        btn.className = 'choice-button';
+        btn.onclick = () => checkAnswer(choice, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(selected, btn) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+      document.querySelectorAll('.choice-button').forEach(b => b.disabled = true);
+      const isCorrect = Math.abs(selected - currentProblem.answer) < 0.00001;
+      document.getElementById('feedback').textContent = isCorrect ? "✅ Correct!" : `❌ Wrong. Answer: ${currentProblem.answer}`;
+      document.getElementById('joke').textContent = getRandom(jokes);
+      document.getElementById('tip').textContent = `💡 Tip: ${getRandom(tips)}`;
+      document.getElementById('nextBtn').style.display = 'block';
+
+      const log = JSON.parse(localStorage.getItem('log') || '{}');
+      const today = getToday();
       if (!log[today]) log[today] = [];
       log[today].push(isCorrect);
       localStorage.setItem('log', JSON.stringify(log));
 
-      updateStats();
+      const wrongMap = JSON.parse(localStorage.getItem('wrongProblems') || '{}');
+      const prob = currentProblem.problemText;
 
-      // Generate next problem
-      currentProblem = generateUniqueProblem();
-      document.getElementById('problem').textContent = currentProblem.problemText;
-      document.getElementById('answer').value = '';
+      if (!isCorrect) {
+        wrongMap[prob] = { correctCount: 0, correctAnswer: currentProblem.answer };
+      } else if (inReview && wrongMap[prob]) {
+        wrongMap[prob].correctCount++;
+        if (wrongMap[prob].correctCount >= 3) delete wrongMap[prob];
+      }
+
+      localStorage.setItem('wrongProblems', JSON.stringify(wrongMap));
+      updateStats();
     }
 
     function updateStats() {
       const log = JSON.parse(localStorage.getItem('log') || '{}');
       const allDays = Object.keys(log);
       let total = 0, correct = 0;
-
-      allDays.forEach(day => {
-        log[day].forEach(ans => {
-          total++;
-          if (ans) correct++;
-        });
-      });
-
-      const sortedDays = allDays.sort().slice(-7);
-      let last7Total = 0, last7Correct = 0;
-      sortedDays.forEach(day => {
-        log[day].forEach(ans => {
-          last7Total++;
-          if (ans) last7Correct++;
-        });
-      });
+      allDays.forEach(day => log[day].forEach(ans => { total++; if (ans) correct++; }));
+      const recent = allDays.sort().slice(-7);
+      let recentTotal = 0, recentCorrect = 0;
+      recent.forEach(day => log[day].forEach(ans => { recentTotal++; if (ans) recentCorrect++; }));
 
       let streak = 0;
       const today = new Date();
       for (let i = 0; i < 365; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const str = date.toISOString().split('T')[0];
-        if (log[str] && log[str].length > 0) {
-          streak++;
-        } else {
-          break;
-        }
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const str = d.toISOString().split('T')[0];
+        if (log[str]?.length > 0) streak++;
+        else break;
       }
 
-      document.getElementById('streak').textContent = `🔥 Current Streak: ${streak} day${streak !== 1 ? 's' : ''}`;
-      document.getElementById('stats').textContent = `✅ Overall Accuracy: ${Math.round(100 * correct / Math.max(total, 1))}% | Last 7 Days: ${Math.round(100 * last7Correct / Math.max(last7Total, 1))}%`;
+      document.getElementById('streak').textContent = `🔥 Streak: ${streak} day${streak !== 1 ? 's' : ''}`;
+      document.getElementById('stats').textContent = `✅ Accuracy: ${Math.round((correct / Math.max(total,1)) * 100)}% | Last 7 Days: ${Math.round((recentCorrect / Math.max(recentTotal,1)) * 100)}%`;
     }
 
+    document.getElementById('nextBtn').addEventListener('click', renderProblem);
+    renderProblem();
     updateStats();
   </script>
 </body>
