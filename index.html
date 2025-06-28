@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Scientific Notation Practice</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2em; max-width: 600px; margin: auto; }
+    .problem { font-size: 1.3em; margin: 1em 0; }
+    input, button { padding: 0.5em; font-size: 1em; margin-top: 1em; width: 100%; }
+    .feedback, .stats, .streak { margin-top: 1em; font-weight: bold; }
+    hr { margin: 2em 0; }
+  </style>
+</head>
+<body>
+  <h1>Daily Math Practice</h1>
+  <div class="streak" id="streak"></div>
+  <div class="stats" id="stats"></div>
+  <hr />
+  <div class="problem" id="problem"></div>
+  <input type="text" id="answer" placeholder="Enter your answer...">
+  <button onclick="checkAnswer()">Submit Answer</button>
+  <div class="feedback" id="feedback"></div>
+  <script>
+    // Utilities
+    function random(seed) {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    }
+
+    function getTodayString() {
+      const d = new Date();
+      return d.toISOString().split('T')[0];
+    }
+
+    function generateUniqueProblem() {
+      const pastProblems = JSON.parse(localStorage.getItem('pastProblems') || '[]');
+      let attempt = 0;
+      let problemText, answer;
+      while (attempt < 1000) {
+        const useSci = Math.random() > 0.5;
+        const isDiv = Math.random() > 0.5;
+
+        if (useSci) {
+          const b1 = +(Math.random() * 9 + 1).toFixed(3);
+          const e1 = Math.floor(Math.random() * 9 - 5);
+          const b2 = +(Math.random() * 9 + 1).toFixed(3);
+          const e2 = Math.floor(Math.random() * 9 - 5);
+          const l = `${b1}×10^${e1}`;
+          const r = `${b2}×10^${e2}`;
+          problemText = `(${l}) ${isDiv ? '/' : '*'} (${r})`;
+          answer = isDiv
+            ? (b1 / b2 * Math.pow(10, e1 - e2))
+            : (b1 * b2 * Math.pow(10, e1 + e2));
+        } else {
+          const n1 = +(Math.random() * 0.999).toFixed(5);
+          const n2 = +(Math.random() * 0.999).toFixed(5);
+          problemText = `${n1} ${isDiv ? '/' : '*'} ${n2}`;
+          answer = isDiv ? n1 / n2 : n1 * n2;
+        }
+
+        if (!pastProblems.includes(problemText)) {
+          return { problemText, answer: +answer.toFixed(8) };
+        }
+        attempt++;
+      }
+      return null;
+    }
+
+    // State
+    const currentProblem = generateUniqueProblem();
+    document.getElementById('problem').textContent = currentProblem.problemText;
+
+    function checkAnswer() {
+      const userVal = parseFloat(document.getElementById('answer').value);
+      const correct = currentProblem.answer;
+      const isCorrect = Math.abs(userVal - correct) < 0.00001;
+
+      document.getElementById('feedback').textContent = isCorrect ? "✅ Correct!" : `❌ Try again. Answer was ${correct}`;
+
+      const today = getTodayString();
+      const pastProblems = JSON.parse(localStorage.getItem('pastProblems') || '[]');
+      pastProblems.push(currentProblem.problemText);
+      localStorage.setItem('pastProblems', JSON.stringify(pastProblems));
+
+      let log = JSON.parse(localStorage.getItem('log') || '{}');
+      if (!log[today]) log[today] = [];
+      log[today].push(isCorrect);
+      localStorage.setItem('log', JSON.stringify(log));
+
+      updateStats();
+    }
+
+    function updateStats() {
+      const log = JSON.parse(localStorage.getItem('log') || '{}');
+      const allDays = Object.keys(log);
+      let total = 0, correct = 0;
+
+      allDays.forEach(day => {
+        log[day].forEach(ans => {
+          total++;
+          if (ans) correct++;
+        });
+      });
+
+      // last 7 days
+      const sortedDays = allDays.sort().slice(-7);
+      let last7Total = 0, last7Correct = 0;
+      sortedDays.forEach(day => {
+        log[day].forEach(ans => {
+          last7Total++;
+          if (ans) last7Correct++;
+        });
+      });
+
+      // streak
+      let streak = 0;
+      const today = new Date();
+      for (let i = 0; i < 365; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const str = date.toISOString().split('T')[0];
+        if (log[str] && log[str].length > 0) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+
+      document.getElementById('streak').textContent = `🔥 Current Streak: ${streak} day${streak !== 1 ? 's' : ''}`;
+      document.getElementById('stats').textContent = `✅ Overall Accuracy: ${Math.round(100 * correct / Math.max(total, 1))}% | Last 7 Days: ${Math.round(100 * last7Correct / Math.max(last7Total, 1))}%`;
+    }
+
+    updateStats();
+  </script>
+</body>
+</html>
