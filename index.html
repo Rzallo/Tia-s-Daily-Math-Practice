@@ -63,10 +63,15 @@
       background-color: #005bb5;
     }
 
-    .feedback, .stats, .streak {
+    .feedback, .stats, .streak, .joke {
       margin-top: 1.5em;
       font-weight: bold;
       text-align: center;
+    }
+
+    .joke {
+      font-style: italic;
+      color: #888;
     }
 
     hr {
@@ -90,6 +95,8 @@
   <input type="text" id="answer" placeholder="Enter your answer...">
   <button onclick="checkAnswer()">Submit Answer</button>
   <div class="feedback" id="feedback"></div>
+  <div class="joke" id="joke"></div>
+
   <script>
     // Dark mode toggle
     const darkToggle = document.getElementById('darkToggle');
@@ -104,6 +111,22 @@
         localStorage.setItem('dark-mode', 'false');
       }
     });
+
+    // Jokes
+    const jokes = [
+      "Why did the student eat his homework? Because the teacher said it was a piece of cake!",
+      "Why was the equal sign so humble? Because it knew it wasn't less than or greater than anyone else.",
+      "Parallel lines have so much in common… it’s a shame they’ll never meet.",
+      "What did the zero say to the eight? Nice belt!",
+      "I told my calculator a joke… but it couldn’t compute it.",
+      "What do you call friends who love math? Alge-bros!",
+      "Why did the obtuse angle go to therapy? Because it was never right."
+    ];
+
+    function getRandomJoke() {
+      const index = Math.floor(Math.random() * jokes.length);
+      return jokes[index];
+    }
 
     // Utilities
     function getTodayString() {
@@ -146,7 +169,7 @@
     }
 
     // State
-    const currentProblem = generateUniqueProblem();
+    let currentProblem = generateUniqueProblem();
     document.getElementById('problem').textContent = currentProblem.problemText;
 
     function checkAnswer() {
@@ -155,6 +178,7 @@
       const isCorrect = Math.abs(userVal - correct) < 0.00001;
 
       document.getElementById('feedback').textContent = isCorrect ? "✅ Correct!" : `❌ Try again. Answer was ${correct}`;
+      document.getElementById('joke').textContent = getRandomJoke();
 
       const today = getTodayString();
       const pastProblems = JSON.parse(localStorage.getItem('pastProblems') || '[]');
@@ -167,6 +191,11 @@
       localStorage.setItem('log', JSON.stringify(log));
 
       updateStats();
+
+      // Generate next problem
+      currentProblem = generateUniqueProblem();
+      document.getElementById('problem').textContent = currentProblem.problemText;
+      document.getElementById('answer').value = '';
     }
 
     function updateStats() {
@@ -181,7 +210,6 @@
         });
       });
 
-      // last 7 days
       const sortedDays = allDays.sort().slice(-7);
       let last7Total = 0, last7Correct = 0;
       sortedDays.forEach(day => {
@@ -191,7 +219,6 @@
         });
       });
 
-      // streak
       let streak = 0;
       const today = new Date();
       for (let i = 0; i < 365; i++) {
