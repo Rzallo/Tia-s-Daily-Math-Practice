@@ -1,41 +1,126 @@
-<!-- Difficulty selector added + logic for varying problem generation by level -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Scientific Notation Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    .container {
+      margin-top: 50px;
+    }
+    .difficulty-controls {
+      margin-bottom: 20px;
+    }
+    select, button {
+      padding: 8px 12px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    #problem {
+      font-size: 24px;
+      margin: 20px 0;
+    }
+    #answerInput {
+      font-size: 18px;
+      padding: 5px;
+      width: 100px;
+      text-align: center;
+    }
+    #submitAnswer {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    #submitAnswer:hover {
+      background-color: #0056b3;
+    }
+    #feedback {
+      font-weight: bold;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="difficulty-controls">
+      <label for="difficulty">Select Difficulty: </label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+        <option value="hardest">Hardest</option>
+      </select>
+      <button onclick="loadNewProblem()">Change Difficulty</button>
+    </div>
 
-<label for="difficulty">Select Difficulty: </label>
-<select id="difficulty">
-  <option value="easy">Easy</option>
-  <option value="medium">Medium</option>
-  <option value="hard">Hard</option>
-  <option value="hardest">Hardest</option>
-</select>
+    <div id="problem">Loading problem...</div>
+    <input type="text" id="answerInput" placeholder="Answer">
+    <button id="submitAnswer" onclick="checkAnswer()">Submit</button>
+    <div id="feedback"></div>
+  </div>
 
-<script>
-function generateRandomProblem() {
-  const difficulty = document.getElementById('difficulty')?.value || 'medium';
-  let a, b;
-  switch (difficulty) {
-    case 'easy':
-      a = +(Math.random() * 10).toFixed(2);
-      b = +(Math.random() * 10).toFixed(2);
-      break;
-    case 'medium':
-      a = +(Math.random() * 100).toPrecision(3);
-      b = +(Math.random() * 10).toPrecision(3);
-      break;
-    case 'hard':
-      a = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 3 + 1))).toExponential(2);
-      b = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 2))).toExponential(2);
-      break;
-    case 'hardest':
-      a = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 5 - 2))).toExponential(3);
-      b = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 5 - 2))).toExponential(3);
-      break;
-    default:
-      a = +(Math.random() * 100).toPrecision(3);
-      b = +(Math.random() * 10).toPrecision(3);
-  }
-  const isDiv = Math.random() < 0.5;
-  const result = isDiv ? a / b : a * b;
-  const problemText = isDiv ? `${a} ÷ ${b}` : `${a} × ${b}`;
-  return { problemText, answer: +result.toPrecision(4) };
-}
-</script>
+  <script>
+    let currentAnswer = 0;
+
+    function generateRandomProblem() {
+      const difficulty = document.getElementById('difficulty')?.value || 'medium';
+      let a, b;
+      switch (difficulty) {
+        case 'easy':
+          a = +(Math.random() * 10).toFixed(1);
+          b = +(Math.random() * 10).toFixed(1);
+          break;
+        case 'medium':
+          a = +(Math.random() * 100).toFixed(1);
+          b = +(Math.random() * 10).toFixed(1);
+          break;
+        case 'hard':
+          a = +(Math.random() * Math.pow(10, 2)).toExponential(2);
+          b = +(Math.random() * Math.pow(10, 1)).toExponential(2);
+          break;
+        case 'hardest':
+          a = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 4 - 1))).toExponential(3);
+          b = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 4 - 1))).toExponential(3);
+          break;
+        default:
+          a = +(Math.random() * 100).toFixed(1);
+          b = +(Math.random() * 10).toFixed(1);
+      }
+      const isDiv = Math.random() < 0.5;
+      const result = isDiv ? a / b : a * b;
+      const problemText = isDiv ? `${a} ÷ ${b}` : `${a} × ${b}`;
+      return { problemText, answer: +result.toPrecision(4) };
+    }
+
+    function loadNewProblem() {
+      const problem = generateRandomProblem();
+      document.getElementById('problem').textContent = problem.problemText;
+      currentAnswer = problem.answer;
+      document.getElementById('answerInput').value = '';
+      document.getElementById('feedback').textContent = '';
+    }
+
+    function checkAnswer() {
+      const userAnswer = parseFloat(document.getElementById('answerInput').value);
+      if (Math.abs(userAnswer - currentAnswer) < 0.01) {
+        document.getElementById('feedback').textContent = '✅ Correct!';
+      } else {
+        document.getElementById('feedback').textContent = `❌ Incorrect. Correct answer was ${currentAnswer}`;
+      }
+      setTimeout(loadNewProblem, 2000);
+    }
+
+    window.onload = loadNewProblem;
+  </script>
+</body>
+</html>
