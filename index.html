@@ -1,75 +1,41 @@
-[FULL UPDATED HTML WITH MISSED QUESTIONS BUTTON AND REVIEW SESSION LIMITS]
+<!-- Difficulty selector added + logic for varying problem generation by level -->
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <!-- Head content unchanged -->
-</head>
-<body>
-  <h1>📘 Daily Math Practice</h1>
-  <div class="toggle-container">
-    <label>
-      <input type="checkbox" id="darkToggle"> 🌙 Dark Mode
-    </label>
-  </div>
-  <div class="streak" id="streak"></div>
-  <div class="stats" id="stats"></div>
-  <div class="review-mode" id="reviewMode"></div>
-  <button id="goToMissed" class="next-button">📂 Practice Missed Questions</button>
-  <hr />
-  <div class="problem" id="problem"></div>
-  <div class="choices" id="choices"></div>
-  <div class="feedback" id="feedback"></div>
-  <div class="joke" id="joke"></div>
-  <div class="tip" id="tip"></div>
-  <button class="next-button" id="nextBtn" style="display:none;">Next Question</button>
+<label for="difficulty">Select Difficulty: </label>
+<select id="difficulty">
+  <option value="easy">Easy</option>
+  <option value="medium">Medium</option>
+  <option value="hard">Hard</option>
+  <option value="hardest">Hardest</option>
+</select>
 
 <script>
-  // Inside <script>...
-  let reviewQueue = [], reviewSessionActive = false;
-
-  function startReviewSession() {
-    const wrongMap = JSON.parse(localStorage.getItem('wrongProblems') || '{}');
-    reviewQueue = Object.entries(wrongMap).map(([problemText, data]) => ({ problemText, ...data }));
-    reviewQueue = reviewQueue.sort(() => Math.random() - 0.5);
-    reviewSessionActive = true;
-    renderReviewProblem();
+function generateRandomProblem() {
+  const difficulty = document.getElementById('difficulty')?.value || 'medium';
+  let a, b;
+  switch (difficulty) {
+    case 'easy':
+      a = +(Math.random() * 10).toFixed(2);
+      b = +(Math.random() * 10).toFixed(2);
+      break;
+    case 'medium':
+      a = +(Math.random() * 100).toPrecision(3);
+      b = +(Math.random() * 10).toPrecision(3);
+      break;
+    case 'hard':
+      a = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 3 + 1))).toExponential(2);
+      b = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 2))).toExponential(2);
+      break;
+    case 'hardest':
+      a = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 5 - 2))).toExponential(3);
+      b = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 5 - 2))).toExponential(3);
+      break;
+    default:
+      a = +(Math.random() * 100).toPrecision(3);
+      b = +(Math.random() * 10).toPrecision(3);
   }
-
-  function renderReviewProblem() {
-    if (!reviewQueue.length) {
-      reviewSessionActive = false;
-      alert('✅ Review complete for this session! Come back tomorrow or practice new problems.');
-      renderProblem();
-      return;
-    }
-    const current = reviewQueue.pop();
-    currentProblem = {
-      problemText: current.problemText,
-      answer: current.correctAnswer
-    };
-    inReview = true;
-    renderProblem(true);
-  }
-
-  function renderProblem(forceReview = false) {
-    // Modified renderProblem logic to handle review session
-    if (forceReview) {
-      document.getElementById('reviewMode').textContent = '🧠 Review Mode — Get it right 3 times to remove!';
-    } else {
-      // ... existing logic (as seen in the original file)
-    }
-  }
-
-  document.getElementById('goToMissed').addEventListener('click', () => {
-    if (reviewSessionActive) {
-      alert('🕓 You already started today's review session. Please finish that first.');
-    } else {
-      startReviewSession();
-    }
-  });
-
-  // All other logic remains the same
+  const isDiv = Math.random() < 0.5;
+  const result = isDiv ? a / b : a * b;
+  const problemText = isDiv ? `${a} ÷ ${b}` : `${a} × ${b}`;
+  return { problemText, answer: +result.toPrecision(4) };
+}
 </script>
-</body>
-</html>
