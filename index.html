@@ -33,15 +33,15 @@
     #answerInput {
       font-size: 18px;
       padding: 5px;
-      width: 100px;
+      width: 120px;
       text-align: center;
     }
-    #submitAnswer {
+    #submitAnswer, #changeDifficulty {
       background-color: #007bff;
       color: white;
       cursor: pointer;
     }
-    #submitAnswer:hover {
+    #submitAnswer:hover, #changeDifficulty:hover {
       background-color: #0056b3;
     }
     #feedback {
@@ -60,7 +60,7 @@
         <option value="hard">Hard</option>
         <option value="hardest">Hardest</option>
       </select>
-      <button onclick="loadNewProblem()">Change Difficulty</button>
+      <button id="changeDifficulty" onclick="loadNewProblem()">Change Difficulty</button>
     </div>
 
     <div id="problem">Loading problem...</div>
