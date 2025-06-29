@@ -1,127 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Scientific Notation Quiz</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-      color: #333;
-    }
-    .container {
-      margin-top: 50px;
-    }
-    .difficulty-controls {
-      margin-bottom: 20px;
-    }
-    select, button {
-      padding: 8px 12px;
-      margin: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    #problem {
-      font-size: 24px;
-      margin: 20px 0;
-    }
-    #answerInput {
-      font-size: 18px;
-      padding: 5px;
-      width: 120px;
-      text-align: center;
-    }
-    #submitAnswer, #changeDifficulty {
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-    #submitAnswer:hover, #changeDifficulty:hover {
-      background-color: #0056b3;
-    }
-    #feedback {
-      font-weight: bold;
-      margin-top: 15px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tia's Daily Math Practice</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark-mode {
+            background-color: #121212;
+            color: #f4f4f4;
+        }
+        .container {
+            max-width: 700px;
+            margin: 2em auto;
+            padding: 2em;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .dark-mode .container {
+            background-color: #1e1e1e;
+        }
+        h1 {
+            text-align: center;
+        }
+        button, select {
+            padding: 0.5em 1em;
+            margin: 0.5em;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            font-size: 1em;
+        }
+        button:hover, select:hover {
+            background-color: #0056b3;
+        }
+        .stats, .question, .answers, .feedback, .joke, .tip {
+            margin: 1em 0;
+            text-align: center;
+        }
+        .answers button {
+            display: block;
+            width: 100%;
+            margin: 0.5em auto;
+            font-size: 1em;
+        }
+        .header-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1em;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Daily Scientific Notation Quiz</h1>
-    <div class="difficulty-controls">
-      <label for="difficulty">Select Difficulty: </label>
-      <select id="difficulty">
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-        <option value="hardest">Hardest</option>
-      </select>
-      <button id="changeDifficulty" onclick="loadNewProblem()">Change Difficulty</button>
+    <div class="container">
+        <h1>Tia's Daily Math Practice</h1>
+        <div class="header-row">
+            <label for="difficulty">Select Difficulty:</label>
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+                <option value="hardest">Hardest</option>
+            </select>
+            <button onclick="setDifficulty()">Change Difficulty</button>
+            <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        </div>
+        <div class="stats">
+            <p id="streak">Daily Streak: 0</p>
+            <p id="accuracy">Accuracy: 0%</p>
+            <p id="total">Total Answered: 0</p>
+        </div>
+        <div class="question" id="question">Loading...</div>
+        <div class="answers" id="answers"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="joke" id="joke"></div>
+        <div class="tip" id="tip"></div>
+        <div style="text-align:center">
+            <button onclick="generateQuestion()">Next Question</button>
+        </div>
     </div>
+    <script>
+        let currentStreak = localStorage.getItem('streak') || 0;
+        let totalCorrect = Number(localStorage.getItem('correct') || 0);
+        let totalAnswered = Number(localStorage.getItem('answered') || 0);
+        let difficulty = localStorage.getItem('difficulty') || 'easy';
 
-    <div id="problem">Loading problem...</div>
-    <input type="text" id="answerInput" placeholder="Answer">
-    <button id="submitAnswer" onclick="checkAnswer()">Submit</button>
-    <div id="feedback"></div>
-  </div>
+        const jokes = [
+            "Why was the math book sad? It had too many problems.",
+            "Parallel lines have so much in common. It’s a shame they’ll never meet.",
+            "Why don’t calculators make good friends? Because they can be calculating!",
+            "What’s the best tool to do math? Multi-pliers!",
+            "Without geometry, life is pointless."
+        ];
 
-  <script>
-    let currentAnswer = 0;
+        const tips = [
+            "Convert all numbers to the same notation before multiplying or dividing.",
+            "When multiplying numbers in scientific notation, multiply the base numbers and add the exponents.",
+            "When dividing, divide the base numbers and subtract the exponents.",
+            "Remember: a negative exponent means you’re dealing with a small number.",
+            "You can move the decimal to convert between standard and scientific notation quickly."
+        ];
 
-    function generateRandomProblem() {
-      const difficulty = document.getElementById('difficulty')?.value || 'medium';
-      let a, b;
-      switch (difficulty) {
-        case 'easy':
-          a = +(Math.random() * 10).toFixed(1);
-          b = +(Math.random() * 10).toFixed(1);
-          break;
-        case 'medium':
-          a = +(Math.random() * 100).toFixed(1);
-          b = +(Math.random() * 10).toFixed(1);
-          break;
-        case 'hard':
-          a = +(Math.random() * Math.pow(10, 2)).toExponential(2);
-          b = +(Math.random() * Math.pow(10, 1)).toExponential(2);
-          break;
-        case 'hardest':
-          a = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 4 - 1))).toExponential(3);
-          b = +(Math.random() * Math.pow(10, Math.floor(Math.random() * 4 - 1))).toExponential(3);
-          break;
-        default:
-          a = +(Math.random() * 100).toFixed(1);
-          b = +(Math.random() * 10).toFixed(1);
-      }
-      const isDiv = Math.random() < 0.5;
-      const result = isDiv ? a / b : a * b;
-      const problemText = isDiv ? `${a} ÷ ${b}` : `${a} × ${b}`;
-      return { problemText, answer: +result.toPrecision(4) };
-    }
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
 
-    function loadNewProblem() {
-      const problem = generateRandomProblem();
-      document.getElementById('problem').textContent = problem.problemText;
-      currentAnswer = problem.answer;
-      document.getElementById('answerInput').value = '';
-      document.getElementById('feedback').textContent = '';
-    }
+        function setDifficulty() {
+            difficulty = document.getElementById('difficulty').value;
+            localStorage.setItem('difficulty', difficulty);
+            generateQuestion();
+        }
 
-    function checkAnswer() {
-      const userAnswer = parseFloat(document.getElementById('answerInput').value);
-      if (Math.abs(userAnswer - currentAnswer) < 0.01) {
-        document.getElementById('feedback').textContent = '✅ Correct!';
-      } else {
-        document.getElementById('feedback').textContent = `❌ Incorrect. Correct answer was ${currentAnswer}`;
-      }
-      setTimeout(loadNewProblem, 2000);
-    }
+        function updateStats() {
+            document.getElementById('streak').innerText = `Daily Streak: ${currentStreak}`;
+            const accuracy = totalAnswered > 0 ? ((totalCorrect / totalAnswered) * 100).toFixed(1) : 0;
+            document.getElementById('accuracy').innerText = `Accuracy: ${accuracy}%`;
+            document.getElementById('total').innerText = `Total Answered: ${totalAnswered}`;
+        }
 
-    window.onload = loadNewProblem;
-  </script>
+        function randomNumber(range) {
+            return Math.random() * range;
+        }
+
+        function toScientific(n) {
+            return n.toExponential(2).replace('e', 'x10^');
+        }
+
+        function getRandomQuestion() {
+            let range;
+            switch(difficulty) {
+                case 'easy': range = 1; break;
+                case 'medium': range = 100; break;
+                case 'hard': range = 1000; break;
+                case 'hardest': range = 10000; break;
+                default: range = 1;
+            }
+
+            const isScientific = Math.random() < 0.5;
+            const isDivision = Math.random() < 0.5;
+            let a = isScientific ? toScientific(randomNumber(range)) : (randomNumber(range)).toFixed(4);
+            let b = isScientific ? toScientific(randomNumber(range)) : (randomNumber(range)).toFixed(4);
+            let answer = isDivision ? eval(a.replace('x10^', 'e')) / eval(b.replace('x10^', 'e')) : eval(a.replace('x10^', 'e')) * eval(b.replace('x10^', 'e'));
+            answer = Number(answer.toPrecision(3));
+
+            const questionText = `${a} ${isDivision ? '/' : '*'} ${b} = ?`;
+            return { questionText, correctAnswer: answer };
+        }
+
+        function generateQuestion() {
+            const { questionText, correctAnswer } = getRandomQuestion();
+            document.getElementById('question').innerText = questionText;
+            document.getElementById('feedback').innerText = '';
+            document.getElementById('joke').innerText = '';
+            document.getElementById('tip').innerText = '';
+
+            const answersDiv = document.getElementById('answers');
+            answersDiv.innerHTML = '';
+            const choices = [correctAnswer];
+            while (choices.length < 4) {
+                let delta = (Math.random() * 0.5 + 0.5) * correctAnswer;
+                let wrongAnswer = Math.random() < 0.5 ? correctAnswer + delta : correctAnswer - delta;
+                wrongAnswer = Number(wrongAnswer.toPrecision(3));
+                if (!choices.includes(wrongAnswer)) choices.push(wrongAnswer);
+            }
+            choices.sort(() => Math.random() - 0.5);
+
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.innerText = choice;
+                btn.onclick = () => checkAnswer(choice, correctAnswer);
+                answersDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, correct) {
+            totalAnswered++;
+            if (selected === correct) {
+                totalCorrect++;
+                currentStreak++;
+                document.getElementById('feedback').innerText = '✅ Correct!';
+                document.getElementById('joke').innerText = `Joke: ${jokes[Math.floor(Math.random() * jokes.length)]}`;
+                document.getElementById('tip').innerText = `Tip: ${tips[Math.floor(Math.random() * tips.length)]}`;
+            } else {
+                currentStreak = 0;
+                document.getElementById('feedback').innerText = `❌ Incorrect. Correct answer was: ${correct}`;
+            }
+            localStorage.setItem('streak', currentStreak);
+            localStorage.setItem('correct', totalCorrect);
+            localStorage.setItem('answered', totalAnswered);
+            updateStats();
+        }
+
+        // Initialize
+        document.getElementById('difficulty').value = difficulty;
+        updateStats();
+        generateQuestion();
+    </script>
 </body>
 </html>
