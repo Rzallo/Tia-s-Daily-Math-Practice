@@ -186,19 +186,18 @@
       return Math.random() * range + 1;
     }
 
-    function toScientific(n) {
-      return n.toExponential(2).replace('e', 'x10^');
-    }
-
     function getRandomQuestion() {
       let range = { easy: 10, medium: 100, hard: 1000, hardest: 10000 }[difficulty];
       const isScientific = Math.random() < 0.5;
       const isDivision = Math.random() < 0.5;
-      let a = isScientific ? toScientific(randomNumber(range)) : (randomNumber(range)).toFixed(4);
-      let b = isScientific ? toScientific(randomNumber(range)) : (randomNumber(range)).toFixed(4);
-      let answer = isDivision ? eval(a.replace('x10^', 'e')) / eval(b.replace('x10^', 'e')) : eval(a.replace('x10^', 'e')) * eval(b.replace('x10^', 'e'));
+      let aRaw = randomNumber(range);
+      let bRaw = randomNumber(range);
+      if (isDivision && Math.abs(bRaw) < 0.01) bRaw += 1;
+      let answer = isDivision ? aRaw / bRaw : aRaw * bRaw;
+      let displayA = isScientific ? aRaw.toExponential(2).replace('e', 'x10^') : aRaw.toFixed(3);
+      let displayB = isScientific ? bRaw.toExponential(2).replace('e', 'x10^') : bRaw.toFixed(3);
       answer = Number(answer.toPrecision(3));
-      const questionText = `${a} ${isDivision ? '/' : '*'} ${b} = ?`;
+      const questionText = `${displayA} ${isDivision ? '/' : '*'} ${displayB} = ?`;
       return { questionText, correctAnswer: answer };
     }
 
