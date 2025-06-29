@@ -28,15 +28,6 @@
       color: #74b9ff;
     }
 
-    .header-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      gap: 1em;
-      margin-bottom: 1em;
-    }
-
     .stats-bar {
       display: flex;
       flex-wrap: wrap;
@@ -54,21 +45,6 @@
       text-align: center;
     }
 
-    select, button {
-      padding: 0.6em 1em;
-      font-size: 1em;
-      border-radius: 6px;
-      border: none;
-      background-color: #3498db;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    button:hover, select:hover {
-      background-color: #2980b9;
-    }
-
     .question {
       font-size: 1.5em;
       text-align: center;
@@ -84,6 +60,7 @@
       font-size: 1.1em;
       background-color: #2c3e50;
       border: 2px solid #2980b9;
+      color: white;
     }
 
     .answers button:hover:not(:disabled) {
@@ -106,17 +83,6 @@
   <div class="container">
     <h1>📘 Daily Math Practice</h1>
 
-    <div class="header-row">
-      <label for="difficulty">Select Difficulty:</label>
-      <select id="difficulty">
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-        <option value="hardest">Hardest</option>
-      </select>
-      <button onclick="setDifficulty()">Change Difficulty</button>
-    </div>
-
     <div class="stats-bar">
       <p id="streak">🔥 Streak: 0d</p>
       <p id="accuracy">✅ Accuracy: 0%</p>
@@ -137,7 +103,95 @@
   </div>
 
   <script>
-    // JavaScript remains the same.
+    const questionEl = document.getElementById('question');
+    const answersEl = document.getElementById('answers');
+    const feedbackEl = document.getElementById('feedback');
+    const jokeEl = document.getElementById('joke');
+    const tipEl = document.getElementById('tip');
+    const streakEl = document.getElementById('streak');
+    const accuracyEl = document.getElementById('accuracy');
+    const totalEl = document.getElementById('total');
+    const timerEl = document.getElementById('timer');
+    const avgTimeEl = document.getElementById('avgTime');
+
+    let currentAnswer = null;
+    let totalQuestions = 0;
+    let correctAnswers = 0;
+    let streak = 0;
+    let startTime = null;
+    let totalTime = 0;
+
+    const jokes = [
+      "Why was the math book sad? Because it had too many problems!",
+      "Why did the student wear glasses in math class? To improve division!",
+      "What did zero say to eight? Nice belt!"
+    ];
+
+    const tips = [
+      "Estimate before calculating to get a ballpark answer.",
+      "Watch out for decimal placement in division.",
+      "Double-check your answer using reverse operations."
+    ];
+
+    function generateQuestion() {
+      const a = (Math.random() * 10).toFixed(5);
+      const b = (Math.random() * 10 + 1).toFixed(5);
+      const answer = (a / b).toFixed(5);
+      currentAnswer = answer;
+      startTime = new Date();
+
+      questionEl.textContent = `${a} / ${b}`;
+
+      const correctIndex = Math.floor(Math.random() * 4);
+      const choices = Array.from({ length: 4 }, (_, i) => {
+        if (i === correctIndex) return answer;
+        return (parseFloat(answer) + (Math.random() * 2 + 0.5)).toFixed(5);
+      });
+
+      answersEl.innerHTML = '';
+      choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.textContent = choice;
+        btn.onclick = () => checkAnswer(choice);
+        answersEl.appendChild(btn);
+      });
+
+      feedbackEl.textContent = '';
+      jokeEl.textContent = '';
+      tipEl.textContent = '';
+    }
+
+    function checkAnswer(choice) {
+      const endTime = new Date();
+      const timeTaken = (endTime - startTime) / 1000;
+      totalTime += timeTaken;
+      totalQuestions++;
+      const isCorrect = choice === currentAnswer;
+
+      if (isCorrect) {
+        feedbackEl.textContent = "✅ Correct!";
+        streak++;
+        correctAnswers++;
+      } else {
+        feedbackEl.textContent = `❌ Incorrect. The correct answer was ${currentAnswer}`;
+        streak = 0;
+      }
+
+      jokeEl.textContent = jokes[Math.floor(Math.random() * jokes.length)];
+      tipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+
+      updateStats();
+    }
+
+    function updateStats() {
+      streakEl.textContent = `🔥 Streak: ${streak}d`;
+      accuracyEl.textContent = `✅ Accuracy: ${Math.round((correctAnswers / totalQuestions) * 100)}%`;
+      totalEl.textContent = `📊 Answered: ${totalQuestions}`;
+      timerEl.textContent = `⏱️ Time: 0s`;
+      avgTimeEl.textContent = `📈 Avg: ${Math.round(totalTime / totalQuestions)}s`;
+    }
+
+    window.onload = generateQuestion;
   </script>
 </body>
 </html>
